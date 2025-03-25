@@ -1,9 +1,9 @@
-# Mikrotik-ASS (Advance Setup Script)
+# Mikrotik-ASS (Advanced Setup Script)
 
 ## 🇬🇷 Ελληνικά
 
 ### Περιγραφή
-Το **Mikrotik-ASS (Advance Setup Script)** είναι ένα προηγμένο Python script που αυτοματοποιεί τη διαδικασία αρχικής παραμετροποίησης ενός router Mikrotik. Μέσω διαδραστικών ερωτήσεων προς το χρήστη, το script εκτελεί αυτόματα βασικές ρυθμίσεις όπως:
+Το **Mikrotik-ASS (Advanced Setup Script)** είναι ένα προηγμένο Python script που αυτοματοποιεί τη διαδικασία αρχικής παραμετροποίησης ενός router Mikrotik. Μέσω διαδραστικών ερωτήσεων προς το χρήστη, το script εκτελεί αυτόματα βασικές ρυθμίσεις όπως:
 
 - Ρύθμιση του ονόματος (Identity) του router.
 - Επιλογή και ρύθμιση interface για DHCP client.
@@ -36,7 +36,7 @@ python mikrotik_ass.py
 ## 🇬🇧 English
 
 ### Description
-The **Mikrotik-ASS (Advance Setup Script)** is an advanced Python script that automates the initial setup process for a Mikrotik router. Through interactive prompts, the script automatically performs essential configuration tasks, including:
+The **Mikrotik-ASS (Advanced Setup Script)** is an advanced Python script that automates the initial setup process for a Mikrotik router. Through interactive prompts, the script automatically performs essential configuration tasks, including:
 
 - Setting the router identity.
 - Selecting and configuring an interface for DHCP client.
@@ -63,3 +63,4 @@ python mikrotik_ass.py
 - Automatic Site-to-Site VPN setup using Wireguard or IP Tunnel.
 - Port Forwarding.
 - Mikrotik security hardening.
+
