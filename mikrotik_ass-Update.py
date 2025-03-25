@@ -29,7 +29,7 @@ def mikrotik_get_interfaces(host, user, password):
     stdin, stdout, stderr = ssh.exec_command("/interface print")
     interfaces_output = stdout.read().decode()
     ssh.close()
-    interfaces = re.findall(r'^\s*(\d+)\s+[RSXDA\s]*([\w\-]+)\s', interfaces_output, re.MULTILINE)
+    interfaces = re.findall(r'\d+\s+[RSXDA]*\s*([\w\-]+)', interfaces_output)
     return interfaces
 
 def mikrotik_get_services(host, user, password):
@@ -45,8 +45,8 @@ def main():
     host, user, password = valid_ssh_credentials()
     interfaces = mikrotik_get_interfaces(host, user, password)
     print("\nΔιαθέσιμα Interfaces:")
-    for idx, (iface_num, iface_name) in enumerate(interfaces):
-        print(f"{iface_num}: {iface_name}")
+    for idx, name in enumerate(interfaces):
+        print(f"{idx}: {name}")
 
     identity = input("\nΒάλε Identity για το Mikrotik: ")
     commands = [f"/system identity set name={identity}"]
@@ -54,10 +54,9 @@ def main():
     use_dhcp_client = input("Θέλεις να βάλεις DHCP-client; (y/n): ").lower()
     dhcp_client_iface = ""
     if use_dhcp_client == 'y':
-        interface_names = [name for _, name in interfaces]
         while True:
             dhcp_client_iface = input("\nΕπέλεξε interface για DHCP-client (δώσε όνομα interface): ")
-            if dhcp_client_iface in interface_names:
+            if dhcp_client_iface in interfaces:
                 break
             else:
                 print("Το όνομα δεν είναι έγκυρο. Προσπάθησε ξανά.")
@@ -72,26 +71,24 @@ def main():
         commands.append(f"/ip route add dst-address=0.0.0.0/0 gateway={wan_gateway}")
         commands.append("/interface list add name=WAN")
         commands.append(f"/interface list member add interface={wan_iface} list=WAN")
-    print("✅ Δημιουργήθηκε Interface List 'WAN'.")
+    print("Δημιουργήθηκε Interface List 'WAN'.")
     commands.append("/ip firewall nat add chain=srcnat action=masquerade out-interface-list=WAN")
-    print("✅ NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
+    print("NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
     commands.append("/interface list add name=PCC")
-    print("✅ Δημιουργήθηκε Interface List 'PCC'.")
+    print("Δημιουργήθηκε Interface List 'PCC'.")
 
     while True:
         bridge_name = input("Δώσε όνομα για το bridge: ")
         bridge_ip = input("Δώσε IP address για το bridge (default 192.168.88.1/24): ") or "192.168.88.1/24"
-        commands += [
-            f"/interface bridge add name={bridge_name} protocol-mode=rstp disabled=no",
-            f"/ip address add address={bridge_ip} interface={bridge_name}"
-        ]
+        commands.append(f"/interface bridge add name={bridge_name} protocol-mode=rstp disabled=no")
+        commands.append(f"/ip address add address={bridge_ip} interface={bridge_name}")
 
         bridge_interfaces = []
         while True:
             bridge_iface = input("Πληκτρολόγησε interface που θα προσθέσεις στο bridge (enter για τερματισμό): ")
             if not bridge_iface:
                 break
-            if bridge_iface in [name for _, name in interfaces]:
+            if bridge_iface in interfaces:
                 bridge_interfaces.append(bridge_iface)
             else:
                 print("Άκυρο interface.")
@@ -120,14 +117,15 @@ def main():
     dhcp_network = input(f"dhcp address space (default {default_dhcp_network}): ") or default_dhcp_network
     gateway = input(f"gateway for dhcp network (default {default_gateway}): ") or default_gateway
     pool = input(f"addresses to give out (default {default_pool}): ") or default_pool
-    dns = input(f"dns servers (default ΚΕΝΟ): ")
+    dns = input("dns servers (default ΚΕΝΟ): ")
     lease_time = input(f"lease time (default {default_lease_time}): ") or default_lease_time
 
-    commands += [
-        f"/ip pool add name=dhcp_pool ranges={pool}",
-        f"/ip dhcp-server add interface={bridge_name} address-pool=dhcp_pool lease-time={lease_time} disabled=no",
-        f"/ip dhcp-server network add address={dhcp_network} gateway={gateway}" + (f" dns-server={dns}" if dns else "")
-    ]
+    commands.append(f"/ip pool add name=dhcp_pool ranges={pool}")
+    commands.append(f"/ip dhcp-server add interface={bridge_name} address-pool=dhcp_pool lease-time={lease_time} disabled=no")
+    if dns:
+        commands.append(f"/ip dhcp-server network add address={dhcp_network} gateway={gateway} dns-server={dns}")
+    else:
+        commands.append(f"/ip dhcp-server network add address={dhcp_network} gateway={gateway}")
 
     set_dns = input("Θέλεις να ορίσεις DNS server στο Mikrotik; (y/n): ").lower()
     if set_dns == 'y':
@@ -141,16 +139,18 @@ def main():
         print(services)
         disable_services = input("Δώσε τα services που θέλεις να απενεργοποιήσεις (διαχωρισμένα με κόμμα): ").split(',')
         for service in disable_services:
-            commands.append(f"/ip service disable [find name={service.strip()}]")
+            service = service.strip()
+            if service:
+                commands.append(f"/ip service disable [find name={service}]")
 
-        if 'ssh' not in disable_services:
+        if 'ssh' not in [s.strip() for s in disable_services]:
             add_ssh_rule = input("Θέλεις να προστατέψεις την SSH πρόσβαση με κανόνα; (y/n): ").lower()
             if add_ssh_rule == 'y':
                 commands += [
                     "/ip firewall filter add chain=input protocol=tcp dst-port=22 src-address-list=ssh_blacklist action=drop comment=\"Block SSH blacklist\"",
                     "/ip firewall filter add chain=input protocol=tcp dst-port=22 connection-state=new src-address-list=!ssh_whitelist action=add-src-to-address-list address-list=ssh_stage1 address-list-timeout=1m",
                     "/ip firewall address-list add list=ssh_blacklist address=0.0.0.0/0 disabled=yes",
-                    "/system scheduler add interval=1m name=\"ssh_check\" on-event=\"/ip firewall address-list remove [find list=ssh_stage1]; :foreach i in=[/ip firewall address-list find list=ssh_stage1] do={ :if ([/ip firewall address-list get \$i count] > 5) do={ /ip firewall address-list add list=ssh_blacklist address=[/ip firewall address-list get \$i address] timeout=1d } }\" policy=read,write"
+                    "/system scheduler add interval=1m name=\"ssh_check\" on-event=\"/ip firewall address-list remove [find list=ssh_stage1]; :foreach i in=[/ip firewall address-list find list=ssh_stage1] do={ :if ([/ip firewall address-list get $i count] > 5) do={ /ip firewall address-list add list=ssh_blacklist address=[/ip firewall address-list get $i address] timeout=1d } }\" policy=read,write"
                 ]
 
     commands.append("/ip cloud set ddns-enabled=yes ddns-update-interval=00:01:00")
