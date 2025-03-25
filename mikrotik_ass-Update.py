@@ -76,35 +76,40 @@ def main():
         commands.append(f"/ip route add dst-address=0.0.0.0/0 gateway={wan_gateway}")
         commands.append("/interface list add name=WAN")
         commands.append(f"/interface list member add interface={wan_iface} list=WAN")
-    print("Δημιουργήθηκε Interface List 'WAN'.")
+    print("✅ Δημιουργήθηκε Interface List 'WAN'.")
     commands.append("/ip firewall nat add chain=srcnat action=masquerade out-interface-list=WAN")
-    print("NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
+    print("✅ NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
     commands.append("/interface list add name=PCC")
-    print("Δημιουργήθηκε Interface List 'PCC'.")
+    print("✅ Δημιουργήθηκε Interface List 'PCC'.")
 
-    bridge_name = input("Δώσε όνομα για το bridge: ")
-    bridge_ip = input("Δώσε IP address για το bridge (default 192.168.88.1/24): ") or "192.168.88.1/24"
-    commands += [
-        f"/interface bridge add name={bridge_name} protocol-mode=rstp disabled=no",
-        f"/ip address add address={bridge_ip} interface={bridge_name}"
-    ]
-
-    bridge_interfaces = []
     while True:
-        bridge_iface = input("Πληκτρολόγησε interface που θα προσθέσεις στο bridge (enter για τερματισμό): ")
-        if not bridge_iface:
+        bridge_name = input("Δώσε όνομα για το bridge: ")
+        bridge_ip = input("Δώσε IP address για το bridge (default 192.168.88.1/24): ") or "192.168.88.1/24"
+        commands += [
+            f"/interface bridge add name={bridge_name} protocol-mode=rstp disabled=no",
+            f"/ip address add address={bridge_ip} interface={bridge_name}"
+        ]
+
+        bridge_interfaces = []
+        while True:
+            bridge_iface = input("Πληκτρολόγησε interface που θα προσθέσεις στο bridge (enter για τερματισμό): ")
+            if not bridge_iface:
+                break
+            if bridge_iface in [name for _, name in interfaces]:
+                bridge_interfaces.append(bridge_iface)
+            else:
+                print("Άκυρο interface.")
+
+        if not bridge_interfaces:
+            print("Δεν επέλεξες κανένα interface για το bridge. Τερματισμός.")
+            sys.exit()
+
+        for iface in bridge_interfaces:
+            commands.append(f"/interface bridge port add bridge={bridge_name} interface={iface}")
+
+        another = input("Θέλεις να δημιουργήσεις άλλο bridge; (y/n): ").lower()
+        if another != 'y':
             break
-        if bridge_iface in [name for _, name in interfaces]:
-            bridge_interfaces.append(bridge_iface)
-        else:
-            print("Άκυρο interface.")
-
-    if not bridge_interfaces:
-        print("Δεν επέλεξες κανένα interface για το bridge. Τερματισμός.")
-        sys.exit()
-
-    for iface in bridge_interfaces:
-        commands.append(f"/interface bridge port add bridge={bridge_name} interface={iface}")
 
     print("\nDHCP Server Setup")
     ip_base = bridge_ip.split('/')[0]
@@ -112,21 +117,26 @@ def main():
     default_dhcp_network = f"{ip_prefix}.0/24"
     default_gateway = ip_base
     default_pool = f"{ip_prefix}.2-{ip_prefix}.254"
-    default_dns = "8.8.8.8"
+    default_dns = ""
     default_lease_time = "10m"
 
     print(f"dhcp server interface: {bridge_name}")
     dhcp_network = input(f"dhcp address space (default {default_dhcp_network}): ") or default_dhcp_network
     gateway = input(f"gateway for dhcp network (default {default_gateway}): ") or default_gateway
     pool = input(f"addresses to give out (default {default_pool}): ") or default_pool
-    dns = input(f"dns servers (default {default_dns}): ") or default_dns
+    dns = input(f"dns servers (default ΚΕΝΟ): ")
     lease_time = input(f"lease time (default {default_lease_time}): ") or default_lease_time
 
     commands += [
         f"/ip pool add name=dhcp_pool ranges={pool}",
         f"/ip dhcp-server add interface={bridge_name} address-pool=dhcp_pool lease-time={lease_time} disabled=no",
-        f"/ip dhcp-server network add address={dhcp_network} gateway={gateway} dns-server={dns}"
+        f"/ip dhcp-server network add address={dhcp_network} gateway={gateway}" + (f" dns-server={dns}" if dns else "")
     ]
+
+    set_dns = input("Θέλεις να ορίσεις DNS server στο Mikrotik; (y/n): ").lower()
+    if set_dns == 'y':
+        dns_servers = input("Δώσε DNS servers (χωρισμένα με κόμμα): ")
+        commands.append(f"/ip dns set servers={dns_servers}")
 
     commands.append("/ip cloud set ddns-enabled=yes ddns-update-interval=00:01:00")
     mikrotik_ssh_execute(host, user, password, commands)
