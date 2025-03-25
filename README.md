@@ -13,6 +13,27 @@
 - Δημιουργία κανόνων NAT masquerade στο firewall.
 - Ενεργοποίηση Mikrotik Cloud (DDNS).
 
+### BETA
+-  1. Δυνατότητα για Πολλαπλά Bridges
+      Ο χρήστης μπορεί να δημιουργήσει περισσότερα από ένα bridges με interfaces.
+      Κάθε bridge έχει τη δική του IP και interface list.
+- 2. Δημιουργία Interface List “WAN” και “PCC”
+      Αν ο χρήστης δημιουργήσει DHCP-client ή βάλει χειροκίνητα IP στο WAN, το script:
+      Δημιουργεί την interface list WAN.
+      Προσθέτει το αντίστοιχο interface σε αυτή.
+      Δημιουργεί και την interface list PCC για μελλοντική χρήση.
+      Επίσης, δημιουργείται αυτόματα κανόνας NAT με out-interface-list=WAN.
+- 3.DHCP Server Setup με Custom Ρυθμίσεις
+      DNS (προαιρετικά, μπορεί να μείνει και κενό)
+      Αν ο χρήστης θέλει, ορίζεται και DNS server στο router (/ip dns set).
+- 4.Επιλογή για Ρύθμιση Firewall
+      Ρωτάει τον χρήστη αν θέλει να ρυθμίσει το firewall:
+      Αν ναι:
+      Εμφανίζει τα ενεργά services (/ip service print)
+      Του επιτρέπει να απενεργοποιήσει όσα θέλει
+      Αν αφήσει ανοιχτό το SSH, μπορεί να ενεργοποιηθεί προστασία SSH
+      Αν κάποιος κάνει πάνω από 5 λάθος login → blacklist για 24 ώρες
+
 ### Προαπαιτούμενα
 - Python 3.x
 - Πακέτο `paramiko` (εγκαθίσταται αυτόματα από το script αν δεν υπάρχει)
@@ -49,6 +70,27 @@ The **Mikrotik-ASS (Advanced Setup Script)** is an advanced Python script that a
 ### Prerequisites
 - Python 3.x
 - `paramiko` package (installed automatically by the script if not present)
+
+### BETA
+- 1. Multiple Bridges Ability
+      The user can create more than one bridge with interfaces.
+     Each bridge has its own IP and interface list.
+- 2. Create Interface List “WAN” and “PCC”
+      If the user creates a DHCP-client or manually sets IP on the WAN, the script:
+      Creates the WAN interface list.
+      Adds the corresponding interface to it.
+      Creates the PCC interface list for future use.
+      Also, a NAT rule is automatically created with out-interface-list=WAN.
+- 3.DHCP Server Setup with Custom Settings
+      DNS (optional, can be left blank)
+      If the user wants, a DNS server is also defined on the router (/ip dns set).
+- 4.Firewall Configuration Option
+      Asks the user if they want to configure the firewall:
+      If so:
+      Displays the active services (/ip service print)
+      Allows them to disable whatever they want
+      If they leave SSH open, SSH protection can be enabled
+      If someone makes more than 5 incorrect logins → blacklist for 24 hours
 
 ### Usage
 Simply run the script and follow the prompts displayed in the terminal:
