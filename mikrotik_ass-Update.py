@@ -32,18 +32,14 @@ def mikrotik_get_interfaces(host, user, password):
     interfaces = re.findall(r'^\s*(\d+)\s+[RSXDA\s]*([\w\-]+)\s', interfaces_output, re.MULTILINE)
     return interfaces
 
-def valid_ssh_credentials():
-    while True:
-        host = input("Mikrotik IP: ")
-        user = input("Mikrotik username: ")
-        password = getpass("Mikrotik password: ")
-        try:
-            mikrotik_get_interfaces(host, user, password)
-            return host, user, password
-        except paramiko.AuthenticationException:
-            print("Λάθος username ή password. Προσπάθησε ξανά.")
-        except paramiko.SSHException as e:
-            print(f"Πρόβλημα σύνδεσης: {e}. Προσπάθησε ξανά.")
+def mikrotik_get_services(host, user, password):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname=host, username=user, password=password)
+    stdin, stdout, stderr = ssh.exec_command("/ip service print")
+    services_output = stdout.read().decode()
+    ssh.close()
+    return services_output
 
 def main():
     host, user, password = valid_ssh_credentials()
@@ -138,6 +134,25 @@ def main():
         dns_servers = input("Δώσε DNS servers (χωρισμένα με κόμμα): ")
         commands.append(f"/ip dns set servers={dns_servers}")
 
+    setup_firewall = input("Θέλεις να ρυθμίσεις firewall; (y/n): ").lower()
+    if setup_firewall == 'y':
+        services = mikrotik_get_services(host, user, password)
+        print("\nΕνεργά Services:")
+        print(services)
+        disable_services = input("Δώσε τα services που θέλεις να απενεργοποιήσεις (διαχωρισμένα με κόμμα): ").split(',')
+        for service in disable_services:
+            commands.append(f"/ip service disable [find name={service.strip()}]")
+
+        if 'ssh' not in disable_services:
+            add_ssh_rule = input("Θέλεις να προστατέψεις την SSH πρόσβαση με κανόνα; (y/n): ").lower()
+            if add_ssh_rule == 'y':
+                commands += [
+                    "/ip firewall filter add chain=input protocol=tcp dst-port=22 src-address-list=ssh_blacklist action=drop comment=\"Block SSH blacklist\"",
+                    "/ip firewall filter add chain=input protocol=tcp dst-port=22 connection-state=new src-address-list=!ssh_whitelist action=add-src-to-address-list address-list=ssh_stage1 address-list-timeout=1m",
+                    "/ip firewall address-list add list=ssh_blacklist address=0.0.0.0/0 disabled=yes",
+                    "/system scheduler add interval=1m name=\"ssh_check\" on-event=\"/ip firewall address-list remove [find list=ssh_stage1]; :foreach i in=[/ip firewall address-list find list=ssh_stage1] do={ :if ([/ip firewall address-list get \$i count] > 5) do={ /ip firewall address-list add list=ssh_blacklist address=[/ip firewall address-list get \$i address] timeout=1d } }\" policy=read,write"
+                ]
+
     commands.append("/ip cloud set ddns-enabled=yes ddns-update-interval=00:01:00")
     mikrotik_ssh_execute(host, user, password, commands)
 
@@ -149,6 +164,19 @@ def main():
     ssh.close()
 
     print(f"Οι αλλαγές πραγματοποιήθηκαν επιτυχώς!\nΤο DNS name του Mikrotik είναι:\n{cloud_dns}")
+
+def valid_ssh_credentials():
+    while True:
+        host = input("Mikrotik IP: ")
+        user = input("Mikrotik username: ")
+        password = getpass("Mikrotik password: ")
+        try:
+            mikrotik_get_interfaces(host, user, password)
+            return host, user, password
+        except paramiko.AuthenticationException:
+            print("Λάθος username ή password. Προσπάθησε ξανά.")
+        except paramiko.SSHException as e:
+            print(f"Πρόβλημα σύνδεσης: {e}. Προσπάθησε ξανά.")
 
 if __name__ == "__main__":
     main()
