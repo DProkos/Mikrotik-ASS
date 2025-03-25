@@ -76,11 +76,11 @@ def main():
         commands.append(f"/ip route add dst-address=0.0.0.0/0 gateway={wan_gateway}")
         commands.append("/interface list add name=WAN")
         commands.append(f"/interface list member add interface={wan_iface} list=WAN")
-    print("✅ Δημιουργήθηκε Interface List 'WAN'.")
+    print("Δημιουργήθηκε Interface List 'WAN'.")
     commands.append("/ip firewall nat add chain=srcnat action=masquerade out-interface-list=WAN")
-    print("✅ NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
+    print("NAT masquerade δημιουργήθηκε με out-interface-list 'WAN'.")
     commands.append("/interface list add name=PCC")
-    print("✅ Δημιουργήθηκε Interface List 'PCC'.")
+    print("Δημιουργήθηκε Interface List 'PCC'.")
 
     bridge_name = input("Δώσε όνομα για το bridge: ")
     bridge_ip = input("Δώσε IP address για το bridge (default 192.168.88.1/24): ") or "192.168.88.1/24"
