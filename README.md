@@ -24,6 +24,13 @@
 python mikrotik_ass.py
 ```
 
+### Μελλοντικές Προσθήκες
+- Ενοποίηση γραμμών με PCC και αυτόματη δημιουργία κανόνων mangle βάσει του αριθμού των WAN.
+- Αυτόματη δημιουργία Wireguard server και client με αυτόματο generation του αρχείου config.
+- Αυτόματο Site-to-Site VPN με Wireguard ή IP Tunnel.
+- Port Forwarding.
+- Θωράκιση ασφαλείας Mikrotik.
+
 ---
 
 ## 🇬🇧 English
@@ -50,3 +57,9 @@ Simply run the script and follow the prompts displayed in the terminal:
 python mikrotik_ass.py
 ```
 
+### Future Additions
+- WAN aggregation using PCC with automatic creation of mangle rules based on the number of WAN connections.
+- Automatic Wireguard server and client setup with automatic generation of configuration files.
+- Automatic Site-to-Site VPN setup using Wireguard or IP Tunnel.
+- Port Forwarding.
+- Mikrotik security hardening.
