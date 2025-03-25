@@ -23,10 +23,10 @@
       Προσθέτει το αντίστοιχο interface σε αυτή.
       Δημιουργεί και την interface list PCC για μελλοντική χρήση.
       Επίσης, δημιουργείται αυτόματα κανόνας NAT με out-interface-list=WAN.
-- 3.DHCP Server Setup με Custom Ρυθμίσεις
+- 3. DHCP Server Setup με Custom Ρυθμίσεις
       DNS (προαιρετικά, μπορεί να μείνει και κενό)
       Αν ο χρήστης θέλει, ορίζεται και DNS server στο router (/ip dns set).
-- 4.Επιλογή για Ρύθμιση Firewall
+- 4. Επιλογή για Ρύθμιση Firewall
       Ρωτάει τον χρήστη αν θέλει να ρυθμίσει το firewall:
       Αν ναι:
       Εμφανίζει τα ενεργά services (/ip service print)
@@ -81,10 +81,10 @@ The **Mikrotik-ASS (Advanced Setup Script)** is an advanced Python script that a
       Adds the corresponding interface to it.
       Creates the PCC interface list for future use.
       Also, a NAT rule is automatically created with out-interface-list=WAN.
-- 3.DHCP Server Setup with Custom Settings
+- 3. DHCP Server Setup with Custom Settings
       DNS (optional, can be left blank)
       If the user wants, a DNS server is also defined on the router (/ip dns set).
-- 4.Firewall Configuration Option
+- 4. Firewall Configuration Option
       Asks the user if they want to configure the firewall:
       If so:
       Displays the active services (/ip service print)
