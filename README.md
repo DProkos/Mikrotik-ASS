@@ -3,7 +3,7 @@
 ## 🇬🇷 Ελληνικά
 
 ### Περιγραφή
-Το **Mikrotik-ASS (Advanced Setup Script)** είναι ένα προηγμένο Python script που αυτοματοποιεί τη διαδικασία αρχικής παραμετροποίησης ενός router Mikrotik. Μέσω διαδραστικών ερωτήσεων προς το χρήστη, το script εκτελεί αυτόματα βασικές ρυθμίσεις όπως:
+Το **Mikrotik-MASS (Advanced Setup Script)** είναι ένα προηγμένο Python script που αυτοματοποιεί τη διαδικασία αρχικής παραμετροποίησης ενός router Mikrotik. Μέσω διαδραστικών ερωτήσεων προς το χρήστη, το script εκτελεί αυτόματα βασικές ρυθμίσεις όπως:
 
 - Ρύθμιση του ονόματος (Identity) του router.
 - Επιλογή και ρύθμιση interface για DHCP client.
@@ -42,7 +42,7 @@
 Απλώς τρέξτε το script και ακολουθήστε τις οδηγίες που εμφανίζονται στο τερματικό:
 
 ```bash
-python mikrotik_ass.py
+python mikrotik_mass.py
 ```
 
 ### Μελλοντικές Προσθήκες
@@ -96,7 +96,7 @@ The **Mikrotik-MASS (Advanced Setup Script)** is an advanced Python script that 
 Simply run the script and follow the prompts displayed in the terminal:
 
 ```bash
-python mikrotik_ass.py
+python mikrotik_mass.py
 ```
 
 ### Future Additions
