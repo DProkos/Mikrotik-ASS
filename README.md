@@ -1,4 +1,4 @@
-# Mikrotik-ASS (Advanced Setup Script)
+# Mikrotik-ADSS (Advanced Setup Script)
 
 ## 🇬🇷 Ελληνικά
 
